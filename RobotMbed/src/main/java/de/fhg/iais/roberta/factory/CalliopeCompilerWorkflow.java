@@ -141,8 +141,8 @@ public class CalliopeCompilerWorkflow implements ICompilerWorkflow {
 
         if ( SystemUtils.IS_OS_WINDOWS ) {
             scriptName = this.robotCompilerResourcesDir + "/../compile.bat";
-            if (robotCompilerDir.equals("")) {
-            	robotCompilerDir = "\"\"";
+            if ( this.robotCompilerDir.equals("") ) {
+                this.robotCompilerDir = "\"\"";
             }
         }
         Path path = Paths.get(this.pathToCrosscompilerBaseDir + token + "/" + mainFile);
