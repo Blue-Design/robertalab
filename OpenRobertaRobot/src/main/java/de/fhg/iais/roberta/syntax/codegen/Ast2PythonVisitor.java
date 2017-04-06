@@ -23,12 +23,12 @@ import de.fhg.iais.roberta.syntax.methods.MethodReturn;
 import de.fhg.iais.roberta.syntax.methods.MethodVoid;
 import de.fhg.iais.roberta.syntax.stmt.ExprStmt;
 import de.fhg.iais.roberta.syntax.stmt.IfStmt;
-import de.fhg.iais.roberta.syntax.stmt.MethodStmt;
 import de.fhg.iais.roberta.syntax.stmt.RepeatStmt;
-import de.fhg.iais.roberta.syntax.stmt.RepeatStmt.Mode;
 import de.fhg.iais.roberta.syntax.stmt.StmtFlowCon;
+import de.fhg.iais.roberta.syntax.stmt.StmtFlowCon.Flow;
 import de.fhg.iais.roberta.syntax.stmt.StmtList;
 import de.fhg.iais.roberta.typecheck.BlocklyType;
+import de.fhg.iais.roberta.util.dbc.DbcException;
 import de.fhg.iais.roberta.visitor.AstVisitor;
 import de.fhg.iais.roberta.visitor.CommonLanguageVisitor;
 
@@ -43,6 +43,7 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
     /**
      * initialize the Python code generator visitor.
      *
+     * @param programPhrases to generate the code from
      * @param indentation to start with. Will be ince/decr depending on block structure
      */
     Ast2PythonVisitor(ArrayList<ArrayList<Phrase<Void>>> programPhrases, int indentation) {
@@ -185,40 +186,58 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
         return null;
     }
 
+    //    @Override
+    //    public Void visitExprList(ExprList<Void> exprList) {
+    //        boolean first = true;
+    //        for ( Expr<Void> expr : exprList.get() ) {
+    //            if ( !expr.getKind().hasName("EMPTY_EXPR") ) {
+    //                if ( first ) {
+    //                    first = false;
+    //                } else {
+    //                    if ( expr.getKind().hasName("BINARY", "UNARY") ) {
+    //                        this.sb.append("; "); // FIXME
+    //                    } else {
+    //                        this.sb.append(", ");
+    //                    }
+    //                }
+    //                expr.visit(this);
+    //            }
+    //        }
+    //        return null;
+    //    }
+
     @Override
     public Void visitRepeatStmt(RepeatStmt<Void> repeatStmt) {
+        boolean isWaitStmt = repeatStmt.getMode() == RepeatStmt.Mode.WAIT;
         switch ( repeatStmt.getMode() ) {
             case UNTIL:
             case WHILE:
             case FOREVER:
                 generateCodeFromStmtCondition("while", repeatStmt.getExpr());
+                appendTry();
                 break;
             case TIMES:
             case FOR:
                 generateCodeFromStmtConditionFor("for", repeatStmt.getExpr());
+                appendTry();
                 break;
             case WAIT:
                 generateCodeFromStmtCondition("if", repeatStmt.getExpr());
                 break;
             case FOR_EACH:
                 generateCodeFromStmtCondition("for", repeatStmt.getExpr());
+                appendTry();
                 break;
             default:
-                break;
+                throw new DbcException("Invalide Repeat Statement!");
         }
         incrIndentation();
-        Mode mode = repeatStmt.getMode();
-        if ( repeatStmt.getList().get().isEmpty() ) {
-            if ( mode != Mode.WAIT ) {
-                nlIndent();
-                this.sb.append("pass");
-            }
+        appendPassIfEmptyBody(repeatStmt);
+        repeatStmt.getList().visit(this);
+        if ( !isWaitStmt ) {
+            appendExceptionHandling();
         } else {
-            repeatStmt.getList().visit(this);
-        }
-        if ( mode == Mode.WAIT ) {
-            nlIndent();
-            this.sb.append("break");
+            appendBreakStmt(repeatStmt);
         }
         decrIndentation();
         return null;
@@ -226,6 +245,12 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
 
     @Override
     public Void visitStmtFlowCon(StmtFlowCon<Void> stmtFlowCon) {
+        if ( this.loopsLabels.get(this.currenLoop.getLast()) != null ) {
+            if ( this.loopsLabels.get(this.currenLoop.getLast()) ) {
+                this.sb.append("raise " + (stmtFlowCon.getFlow() == Flow.BREAK ? "BreakOutOfALoop" : "ContinueLoop"));
+                return null;
+            }
+        }
         this.sb.append(stmtFlowCon.getFlow().toString().toLowerCase());
         return null;
     }
@@ -239,10 +264,7 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
     @Override
     public Void visitMathPowerFunct(MathPowerFunct<Void> mathPowerFunct) {
         this.sb.append("math.pow(");
-        mathPowerFunct.getParam().get(0).visit(this);
-        this.sb.append(", ");
-        mathPowerFunct.getParam().get(1).visit(this);
-        this.sb.append(")");
+        super.visitMathPowerFunct(mathPowerFunct);
         return null;
     }
 
@@ -308,12 +330,12 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
         this.sb.append("\ndef ").append(methodVoid.getMethodName()).append('(');
         methodVoid.getParameters().visit(this);
         this.sb.append("):");
-        boolean isMethodBodyEmpty = methodVoid.getBody().get().size() != 0;
+        boolean isMethodBodyEmpty = methodVoid.getBody().get().isEmpty();
         if ( isMethodBodyEmpty ) {
-            methodVoid.getBody().visit(this);
-        } else {
             nlIndent();
             this.sb.append("pass");
+        } else {
+            methodVoid.getBody().visit(this);
         }
         return null;
     }
@@ -323,15 +345,15 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
         this.sb.append("\ndef ").append(methodReturn.getMethodName()).append('(');
         methodReturn.getParameters().visit(this);
         this.sb.append("):");
-        boolean isMethodBodyEmpty = methodReturn.getBody().get().size() != 0;
+        boolean isMethodBodyEmpty = methodReturn.getBody().get().isEmpty();
         if ( isMethodBodyEmpty ) {
+            nlIndent();
+            this.sb.append("pass");
+        } else {
             methodReturn.getBody().visit(this);
             this.nlIndent();
             this.sb.append("return ");
             methodReturn.getReturnValue().visit(this);
-        } else {
-            nlIndent();
-            this.sb.append("pass");
         }
         return null;
     }
@@ -350,12 +372,6 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
     }
 
     @Override
-    public Void visitMethodStmt(MethodStmt<Void> methodStmt) {
-        methodStmt.getMethod().visit(this);
-        return null;
-    }
-
-    @Override
     public String getEnumCode(IMode value) {
         return "'" + value.toString().toLowerCase() + "'";
     }
@@ -363,15 +379,16 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
     @Override
     protected void generateCodeFromTernary(IfStmt<Void> ifStmt) {
         ((ExprStmt<Void>) ifStmt.getThenList().get(0).get().get(0)).getExpr().visit(this);
-        this.sb.append(" if ( ");
+        this.sb.append(whitespace() + "if" + whitespace() + "(" + whitespace());
         ifStmt.getExpr().get(0).visit(this);
-        this.sb.append(" ) else ");
+        this.sb.append(whitespace() + ")" + whitespace() + "else" + whitespace());
         ((ExprStmt<Void>) ifStmt.getElseList().get().get(0)).getExpr().visit(this);
     }
 
     @Override
     protected void generateCodeFromIfElse(IfStmt<Void> ifStmt) {
-        for ( int i = 0; i < ifStmt.getExpr().size(); i++ ) {
+        int stmtSize = ifStmt.getExpr().size();
+        for ( int i = 0; i < stmtSize; i++ ) {
             if ( i == 0 ) {
                 generateCodeFromStmtCondition("if", ifStmt.getExpr().get(i));
             } else {
@@ -392,7 +409,7 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
 
     @Override
     protected void generateCodeFromElse(IfStmt<Void> ifStmt) {
-        if ( ifStmt.getElseList().get().size() != 0 ) {
+        if ( !ifStmt.getElseList().get().isEmpty() ) {
             nlIndent();
             this.sb.append("else:");
             incrIndentation();
@@ -432,22 +449,65 @@ public abstract class Ast2PythonVisitor extends CommonLanguageVisitor {
     }
 
     private void generateCodeFromStmtCondition(String stmtType, Expr<Void> expr) {
-        this.sb.append(stmtType).append(' ');
+        this.sb.append(stmtType).append(whitespace());
         expr.visit(this);
         this.sb.append(":");
     }
 
     private void generateCodeFromStmtConditionFor(String stmtType, Expr<Void> expr) {
-        this.sb.append(stmtType).append(' ');
+        this.sb.append(stmtType).append(whitespace());
         ExprList<Void> expressions = (ExprList<Void>) expr;
         expressions.get().get(0).visit(this);
-        this.sb.append(" in xrange(");
+        this.sb.append(whitespace() + "in range(");
         expressions.get().get(1).visit(this);
-        this.sb.append(", ");
+        this.sb.append("," + whitespace());
         expressions.get().get(2).visit(this);
-        this.sb.append(", ");
+        this.sb.append("," + whitespace());
         expressions.get().get(3).visit(this);
         this.sb.append("):");
+    }
+
+    private void appendBreakStmt(RepeatStmt<Void> repeatStmt) {
+        nlIndent();
+        this.sb.append("break");
+    }
+
+    private void appendTry() {
+        increaseLoopCounter();
+
+        if ( this.loopsLabels.get(this.currenLoop.getLast()) ) {
+            incrIndentation();
+            nlIndent();
+            this.sb.append("try:");
+        }
+    }
+
+    private void appendExceptionHandling() {
+        if ( this.loopsLabels.get(this.currenLoop.getLast()) ) {
+            decrIndentation();
+            nlIndent();
+            this.sb.append("except BreakOutOfALoop:");
+            incrIndentation();
+            nlIndent();
+            this.sb.append("break");
+            decrIndentation();
+            nlIndent();
+            this.sb.append("except ContinueLoop:");
+            incrIndentation();
+            nlIndent();
+            this.sb.append("continue");
+            decrIndentation();
+        }
+        this.currenLoop.removeLast();
+    }
+
+    private void appendPassIfEmptyBody(RepeatStmt<Void> repeatStmt) {
+        if ( repeatStmt.getList().get().isEmpty() ) {
+            if ( repeatStmt.getMode() != RepeatStmt.Mode.WAIT ) {
+                nlIndent();
+                this.sb.append("pass");
+            }
+        }
     }
 
 }

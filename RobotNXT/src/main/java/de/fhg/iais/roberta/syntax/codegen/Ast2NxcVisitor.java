@@ -208,7 +208,7 @@ public class Ast2NxcVisitor extends Ast2CppVisitor implements NxtAstVisitor<Void
             this.sb.append("[]");
             if ( var.getValue().getKind().hasName("LIST_CREATE") ) {
                 ListCreate<Void> list = (ListCreate<Void>) var.getValue();
-                if ( list.getValue().get().size() == 0 ) {
+                if ( list.getValue().get().isEmpty() ) {
                     return null;
                 }
             }
@@ -432,19 +432,16 @@ public class Ast2NxcVisitor extends Ast2CppVisitor implements NxtAstVisitor<Void
         return null;
     }
 
-    //no such block for nxt
     @Override
     public Void visitLightAction(LightAction<Void> lightAction) {
         return null;
     }
 
-    //no such block for nxt
     @Override
     public Void visitLightStatusAction(LightStatusAction<Void> lightStatusAction) {
         return null;
     }
 
-    //won't be used
     @Override
     public Void visitPlayFileAction(PlayFileAction<Void> playFileAction) {
         this.sb.append("PlayFile(" + playFileAction.getFileName() + ");");
@@ -772,13 +769,11 @@ public class Ast2NxcVisitor extends Ast2CppVisitor implements NxtAstVisitor<Void
     }
 
     @Override
-    // no gyrosensor
     public Void visitGyroSensor(GyroSensor<Void> gyroSensor) {
         return null;
     }
 
     @Override
-    // no infrared sensor
     public Void visitInfraredSensor(InfraredSensor<Void> infraredSensor) {
         return null;
     }
