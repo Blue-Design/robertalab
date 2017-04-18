@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"author": "Ellen Spertus <ellen.spertus@gmail.com>",
+<<<<<<< 9ea92d5d55d44ef15b61f8269a11555eb1f32efc
 <<<<<<< 5abbc6947084bfc0c0bb137d06d0809358510445
 <<<<<<< e110b5c24466b3c3433120c084e2a7755b43eab5
 <<<<<<< 48f0295f6ce73d085b651fec5d098f0c5ba734dc
@@ -14,6 +15,9 @@
 =======
 		"lastupdated": "2017-04-11 16:26:01.406839",
 >>>>>>> #384 corrected most of the messages
+=======
+		"lastupdated": "2017-04-18 15:16:06.190252",
+>>>>>>> upd msg files
 		"locale": "en",
 		"messagedocumentation" : "qqq"
 	},
@@ -1158,7 +1162,10 @@
 	"MESSAGE_USER_GROUP_DELETED": "User »$« was deleted",
 	"MESSAGE_ADDED_USER": "User »$« was added",
 	"ORA_USER_TO_ADD_NOT_FOUND": "User was not found",
+<<<<<<< 9ea92d5d55d44ef15b61f8269a11555eb1f32efc
 <<<<<<< 5abbc6947084bfc0c0bb137d06d0809358510445
+=======
+>>>>>>> upd msg files
 	"MESSAGE_EDIT_SAVE_GROUP_AS": "Your group has been created",
 	"LIST_BACK_TOOLTIP": "Back to previous view.",
 	"PROGLIST_DELETE_ALL_TOOLTIP": "Click here to delete all selected programs.",
@@ -1175,10 +1182,13 @@
 	"MENU_GALLERY_TOOLTIP": "gallery",
 	"PROGLIST_DELETE_SHARE_WITH_GALLERY": "Your program is allready shared with the gallery. If you change it, it will be automatically updated. Do you want to remove your program from the gallery?",
 	"PROGLIST_SHARE_WITH_GALLERY": "Do you really want to share your program with everybody?"
+<<<<<<< 9ea92d5d55d44ef15b61f8269a11555eb1f32efc
 =======
 	"DISPLAY_SET_BRIGHTNESS_TOOLTIP": "Sets the brightness for all leds of the display. 0 means all leds are turned off, 9 is the brightest value."
 >>>>>>> #384 fixed groups table, added groups and user_group tables to an actual databale
 =======
 	"MESSAGE_EDIT_SAVE_GROUP_AS": "Your group has been created"
 >>>>>>> #384 corrected most of the messages
+=======
+>>>>>>> upd msg files
 }

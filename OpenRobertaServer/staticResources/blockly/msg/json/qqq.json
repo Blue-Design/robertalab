@@ -1140,7 +1140,10 @@
 	"MESSAGE_USER_GROUP_DELETED": "",
 	"MESSAGE_ADDED_USER": "",
 	"ORA_USER_TO_ADD_NOT_FOUND": "",
+<<<<<<< 9ea92d5d55d44ef15b61f8269a11555eb1f32efc
 <<<<<<< 5abbc6947084bfc0c0bb137d06d0809358510445
+=======
+>>>>>>> upd msg files
 	"MESSAGE_EDIT_SAVE_GROUP_AS": "",
 	"LIST_BACK_TOOLTIP": "",
 	"PROGLIST_DELETE_ALL_TOOLTIP": "",
@@ -1157,10 +1160,13 @@
 	"MENU_GALLERY_TOOLTIP": "",
 	"PROGLIST_DELETE_SHARE_WITH_GALLERY": "",
 	"PROGLIST_SHARE_WITH_GALLERY": ""
+<<<<<<< 9ea92d5d55d44ef15b61f8269a11555eb1f32efc
 =======
 	"DISPLAY_SET_BRIGHTNESS_TOOLTIP": ""
 >>>>>>> #384 fixed groups table, added groups and user_group tables to an actual databale
 =======
 	"MESSAGE_EDIT_SAVE_GROUP_AS": ""
 >>>>>>> #384 corrected most of the messages
+=======
+>>>>>>> upd msg files
 }
